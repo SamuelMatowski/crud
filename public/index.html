@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>CRUD Livraria</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>📚 CRUD Livraria</h1>
+
+  <!-- Formulário para adicionar livro -->
+  <h2>Cadastrar Livro</h2>
+  <form id="formLivro">
+    <input type="text" id="titulo" placeholder="Título" required>
+    <input type="text" id="autor" placeholder="Autor" required>
+    <input type="number" id="ano" placeholder="Ano de Publicação" required>
+    <input type="text" id="genero" placeholder="Gênero" required>
+    <input type="text" id="idioma" placeholder="Idioma" required>
+    <input type="number" step="0.01" id="preco" placeholder="Preço" required>
+    <button type="submit">Cadastrar</button>
+  </form>
+
+  <hr>
+
+  <!-- Listagem de livros -->
+  <h2>Lista de Livros</h2>
+  <table border="1" id="tabelaLivros">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Título</th>
+        <th>Autor</th>
+        <th>Ano</th>
+        <th>Gênero</th>
+        <th>Idioma</th>
+        <th>Preço</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const API = "http://localhost:3000/livros";
+
+    // Buscar e listar livros
+    async function listarLivros() {
+      const res = await fetch(API);
+      const livros = await res.json();
+      const tbody = document.querySelector("#tabelaLivros tbody");
+      tbody.innerHTML = "";
+      livros.forEach(livro => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${livro.id}</td>
+          <td>${livro.titulo}</td>
+          <td>${livro.autor}</td>
+          <td>${livro.ano}</td>
+          <td>${livro.genero}</td>
+          <td>${livro.idioma}</td>
+          <td>R$ ${livro.preco}</td>
+          <td>
+            <button onclick="editarLivro(${livro.id})">Editar</button>
+            <button onclick="excluirLivro(${livro.id})">Excluir</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Cadastrar livro
+    document.querySelector("#formLivro").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const livro = {
+        titulo: document.getElementById("titulo").value,
+        autor: document.getElementById("autor").value,
+        ano: parseInt(document.getElementById("ano").value),
+        genero: document.getElementById("genero").value,
+        idioma: document.getElementById("idioma").value,
+        preco: parseFloat(document.getElementById("preco").value)
+      };
+
+      await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(livro)
+      });
+
+      e.target.reset();
+      listarLivros();
+    });
+
+    // Editar livro
+    async function editarLivro(id) {
+      const titulo = prompt("Novo título:");
+      const autor = prompt("Novo autor:");
+      const ano = prompt("Novo ano de publicação:");
+      const genero = prompt("Novo gênero:");
+      const idioma = prompt("Novo idioma:");
+      const preco = prompt("Novo preço:");
+
+      const livroAtualizado = { titulo, autor, ano: parseInt(ano), genero, idioma, preco: parseFloat(preco) };
+
+      await fetch(`${API}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(livroAtualizado)
+      });
+
+      listarLivros();
+    }
+
+    // Excluir livro
+    async function excluirLivro(id) {
+      if (confirm("Tem certeza que deseja excluir este livro?")) {
+        await fetch(`${API}/${id}`, { method: "DELETE" });
+        listarLivros();
+      }
+    }
+
+    // Carregar ao iniciar
+    listarLivros();
+  </script>
+</body>
+</html>
